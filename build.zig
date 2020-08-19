@@ -1,17 +1,39 @@
-const Builder = @import("std").build.Builder;
+const std = @import("std");
+const Builder = std.build.Builder;
+const fmt = std.fmt;
+const printerr = std.debug.print;
 
 pub fn build(b: *Builder) void {
-    const day1 = b.addExecutable("day1", "day1/day1.zig");
-    day1.setBuildMode(b.standardReleaseOptions());
+    // error: array literal requires address-of operator to coerce to slice type '[][]const u8'
+    // var days: [][]const u8 = [_][]const u8{"day1", "day2"};
 
-    const day1_cmd = day1.run();
-    const day1_step = b.step("day1", "Run AOC 2016 Day 1 Program");
-    day1_step.dependOn(&day1_cmd.step);
+    var days = [_][]const u8{"day1", "day2"};
+    var day_no: i32 = 1;
+    const allocator: *std.mem.Allocator = std.heap.page_allocator;
 
-    const day2 = b.addExecutable("day2", "day2/day2.zig");
-    day2.setBuildMode(b.standardReleaseOptions());
+    for (days) |day| {
+        // Oops...
+        // var path_buf: [100]u8 = undefined;
 
-    const day2_cmd = day2.run();
-    const day2_step = b.step("day2", "Run AOC 2016 Day 2 Program");
-    day2_step.dependOn(&day2_cmd.step);
+        var path_buf: []u8 = allocator.alloc(u8, 100) catch {
+            printerr("Error allocating memory for {}.", .{day});
+            return;
+        };
+
+        var msg_buf: []u8 = allocator.alloc(u8, 100) catch {
+            printerr("Error allocating msg for {}.", .{day});
+            return;
+        };
+
+        const path_name = fmt.bufPrint(path_buf[0..], "{}/{}.zig", .{ day, day }) catch unreachable;
+        const day_exe = b.addExecutable(day, path_name);
+        day_exe.setBuildMode(b.standardReleaseOptions());
+
+        const day_cmd = day_exe.run();
+        const run_msg = fmt.bufPrint(msg_buf[0..], "Run AOC 2016 Day {} Program", .{ day_no }) catch unreachable;
+        const day_step = b.step(day, run_msg);
+        day_step.dependOn(&day_cmd.step);
+
+        day_no += 1;
+    }
 }
