@@ -2,6 +2,7 @@ const std = @import("std");
 const File = std.fs.File;
 const mem = std.mem;
 const maxInt = std.math.maxInt;
+const hash_map = std.hash_map;
 
 const Dir = enum {
     North,
@@ -12,7 +13,8 @@ const Dir = enum {
 
 const Turn = enum {
     Left,
-    Right
+    Right,
+    None
 };
 
 const Coords = struct {
@@ -27,6 +29,9 @@ const Coords = struct {
             },
             .Right => {
                 self.turnClk();
+            },
+            .None => {
+
             }
         }
 
@@ -116,7 +121,14 @@ pub fn main() !void {
 
     const allocator: *std.mem.Allocator = std.heap.page_allocator;
     const buf = try std.fs.cwd().readFileAlloc(allocator, "day1/input.1", 1024);
+    defer allocator.free(buf);
 
+    try part1(buf);
+    try part2(buf);
+}
+
+fn part1(buf: []const u8) !void {
+    const stdout = std.io.getStdOut().writer();
     var it = mem.tokenize(buf, ", \n");
     // ./day1/day1.zig:13:5: error: type '?[]const u8' does not support field access
     // for(it.next()) |token| {
@@ -142,4 +154,55 @@ pub fn main() !void {
     }
 
     try stdout.print("Distance to HQ: {}\n", .{coords.taxicab()});
+}
+
+fn part2(buf: []const u8) !void {
+    const stdout = std.io.getStdOut().writer();
+    var it = mem.tokenize(buf, ", \n");
+
+    // Use HashMap as a set.
+    const allocator: *std.mem.Allocator = std.heap.page_allocator;
+    const Loc = struct { x: i16 = 0, y: i16 = 0};
+    const Empty = struct {};
+    var seen = hash_map.AutoHashMap(Loc, Empty).init(allocator);
+    defer seen.deinit();
+
+    var coords = Coords {};
+    var curr_loc = Loc {};
+
+    search: while (it.next()) |token| {
+        var i: u16 = 0;
+        var dist: u16 = 0;
+
+        switch(token[0]) {
+            'R' => {
+                dist = try parseU16(token[1..], 10);
+                coords.move(.Right, 1);
+            },
+            'L' => {
+                dist = try parseU16(token[1..], 10);
+                coords.move(.Left, 1);
+            },
+            else => {
+                return error.BadDirection;
+            }
+        }
+
+        while(i < (dist - 1)) {
+            coords.move(.None, 1);
+            curr_loc = Loc{.x = coords.x, .y = coords.y};
+
+            if((try seen.getOrPut(curr_loc)).found_existing) {
+                break :search;
+            }
+
+            i += 1;
+        }
+    } else {
+        try stdout.print("Actual Location: We didn't visit any location twice!\n", .{});
+        return error.UniqueError;
+    }
+
+    try stdout.print("Actual Location: ({}, {})\n", .{coords.x, coords.y});
+    try stdout.print("Distance Away: {}\n", .{coords.taxicab()});
 }

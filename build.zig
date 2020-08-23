@@ -19,11 +19,14 @@ pub fn build(b: *Builder) void {
             printerr("Error allocating memory for {}.", .{day});
             return;
         };
+        // Segmentation fault at address 0x7f066fb6b000
+        // defer allocator.free(path_buf);
 
         var msg_buf: []u8 = allocator.alloc(u8, 100) catch {
             printerr("Error allocating msg for {}.", .{day});
             return;
         };
+        // defer allocator.free(msg_buf);
 
         const path_name = fmt.bufPrint(path_buf[0..], "{}/{}.zig", .{ day, day }) catch unreachable;
         const day_exe = b.addExecutable(day, path_name);
