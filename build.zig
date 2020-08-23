@@ -7,7 +7,7 @@ pub fn build(b: *Builder) void {
     // error: array literal requires address-of operator to coerce to slice type '[][]const u8'
     // var days: [][]const u8 = [_][]const u8{"day1", "day2"};
 
-    var days = [_][]const u8{"day1", "day2"};
+    var days = [_][]const u8{"day1", "day2", "day3"};
     var day_no: i32 = 1;
     const allocator: *std.mem.Allocator = std.heap.page_allocator;
 
