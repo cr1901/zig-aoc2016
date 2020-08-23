@@ -4,7 +4,7 @@ const assert = std.debug.assert;
 pub const KeyPad = struct {
     num: u8 = 5,
 
-    const Dir = enum {
+    pub const Dir = enum {
         Up,
         Down,
         Left,
@@ -92,3 +92,77 @@ test "keypad" {
     kp.move(.Down) catch unreachable;
     assert(kp.num == 9);
 }
+
+// fn move is identical except for bounds check.
+// This begs for a Trait a la Rust. How to do this in Zig?
+pub const SuperKeyPad = struct {
+    num: u8 = 5,
+
+    pub const Dir = enum {
+        Up,
+        Down,
+        Left,
+        Right
+    };
+
+    pub fn move(self: *SuperKeyPad, d: Dir) !void {
+        if((self.num < 1) or (self.num > 13)) {
+            return error.InvalidDigit;
+        }
+
+        switch(d) {
+            .Up => {
+                self.move_up();
+            },
+            .Down => {
+                self.move_down();
+            },
+            .Left => {
+                self.move_left();
+            },
+            .Right => {
+                self.move_right();
+            }
+        }
+    }
+
+    fn move_up(self: *SuperKeyPad) void {
+        switch(self.num) {
+            1, 2, 4, 5, 9 => {},
+            3, 13 => { self.num -= 2; },
+            6...8 => self.num -= 4,
+            10...12 => self.num -= 4,
+            else => unreachable
+        }
+    }
+
+    fn move_down(self: *SuperKeyPad) void {
+        switch(self.num) {
+            5, 9, 10, 12, 13 => {},
+            1, 11 => { self.num += 2; },
+            2...4 => self.num += 4,
+            6...8 => self.num += 4,
+            else => unreachable
+        }
+    }
+
+    fn move_left(self: *SuperKeyPad) void {
+        switch(self.num) {
+            1, 2, 5, 10, 13 => {},
+            3...4 => self.num -= 1,
+            6...9 => self.num -= 1,
+            11...12 => self.num -= 1,
+            else => unreachable
+        }
+    }
+
+    fn move_right(self: *SuperKeyPad) void {
+        switch(self.num) {
+            1, 4, 9, 12, 13 => {},
+            2...3 => self.num += 1,
+            5...8 => self.num += 1,
+            10...11 => self.num += 1,
+            else => unreachable
+        }
+    }
+};
