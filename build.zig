@@ -1,42 +1,20 @@
 const std = @import("std");
 const Builder = std.build.Builder;
 const fmt = std.fmt;
-const printerr = std.debug.print;
 
 pub fn build(b: *Builder) void {
-    // error: array literal requires address-of operator to coerce to slice type '[][]const u8'
-    // var days: [][]const u8 = [_][]const u8{"day1", "day2"};
+    var buf = [_]u8{undefined} ** 100;
 
-    var days = [_][]const u8{"day1", "day2", "day3"};
-    var day_no: i32 = 1;
-    const allocator: *std.mem.Allocator = std.heap.page_allocator;
+    for ([_][]const u8{ "day1", "day2", "day3" }) |day, ix| {
+        var day_no = ix + 1;
 
-    for (days) |day| {
-        // Oops...
-        // var path_buf: [100]u8 = undefined;
-
-        var path_buf: []u8 = allocator.alloc(u8, 100) catch {
-            printerr("Error allocating memory for {}.", .{day});
-            return;
-        };
-        // Segmentation fault at address 0x7f066fb6b000
-        // defer allocator.free(path_buf);
-
-        var msg_buf: []u8 = allocator.alloc(u8, 100) catch {
-            printerr("Error allocating msg for {}.", .{day});
-            return;
-        };
-        // defer allocator.free(msg_buf);
-
-        const path_name = fmt.bufPrint(path_buf[0..], "{}/{}.zig", .{ day, day }) catch unreachable;
-        const day_exe = b.addExecutable(day, path_name);
+        const path_name = fmt.bufPrint(&buf, "{}/{}.zig", .{ day, day }) catch unreachable;
+        const day_exe = b.addExecutable(day, b.dupe(path_name));
         day_exe.setBuildMode(b.standardReleaseOptions());
 
         const day_cmd = day_exe.run();
-        const run_msg = fmt.bufPrint(msg_buf[0..], "Run AOC 2016 Day {} Program", .{ day_no }) catch unreachable;
-        const day_step = b.step(day, run_msg);
+        const run_msg = fmt.bufPrint(&buf, "Run AOC 2016 Day {} Program", .{day_no}) catch unreachable;
+        const day_step = b.step(day, b.dupe(run_msg));
         day_step.dependOn(&day_cmd.step);
-
-        day_no += 1;
     }
 }
