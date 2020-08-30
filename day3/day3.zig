@@ -86,9 +86,11 @@ pub fn main() !void {
     const stdout = std.io.getStdOut().writer();
     try stdout.print("AOC 2016 Day 3\n", .{});
 
-    const allocator: *std.mem.Allocator = std.heap.page_allocator;
-    const buf = try std.fs.cwd().readFileAlloc(allocator, "day3/input.1", 1024*24);
-    defer allocator.free(buf);
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    const buf = try std.fs.cwd().readFileAlloc(&gpa.allocator, "day3/input.1", 1024 * 24);
+    defer gpa.allocator.free(buf);
 
     var tri_it = TriIterator.init(buf);
     try solve(TriIterator, &tri_it);
@@ -98,17 +100,17 @@ pub fn main() !void {
 
 fn solve(comptime T: type, tri_it: *T) !void {
     const stdout = std.io.getStdOut().writer();
-    var possible_tris : u16 = 0;
+    var possible_tris: u16 = 0;
 
-    while(tri_it.next()) |*tri| {
+    while (tri_it.next()) |*tri| {
         // const asc_u16 = std.sort.asc(u16);
         // ./day3/day3.zig:35:36: error: unable to evaluate constant expression
         sort(u16, tri[0..], {}, asc_u16);
 
-        if(tri[0] + tri[1] > tri[2]) {
+        if (tri[0] + tri[1] > tri[2]) {
             possible_tris += 1;
         }
     }
 
-    try stdout.print("Possible Triangles Total: {}\n", .{possible_tris });
+    try stdout.print("Possible Triangles Total: {}\n", .{possible_tris});
 }
