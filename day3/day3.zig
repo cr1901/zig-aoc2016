@@ -59,8 +59,6 @@ const TriColIterator = struct {
                     var cnt : u8 = i;
                     var int_it = mem.tokenize(line, " ");
 
-                    stdout.print("{}\n", .{line}) catch unreachable;
-
                     while(int_it.next()) |token| : (cnt += 3) {
                         self.chunk[cnt] = std.fmt.parseInt(u16, token, 10) catch return null;
                     }
