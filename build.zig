@@ -6,7 +6,7 @@ const fmt = std.fmt;
 pub fn build(b: *Builder) void {
     var buf = [_]u8{undefined} ** 100;
 
-    for ([_][]const u8{ "day1", "day2", "day3", "day4" }) |day, ix| {
+    for ([_][]const u8{ "day1", "day2", "day3", "day4", "day5" }) |day, ix| {
         var day_no = ix + 1;
 
         const path_name = fmt.bufPrint(&buf, "{}/{}.zig", .{ day, day }) catch unreachable;
